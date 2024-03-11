@@ -14,7 +14,7 @@ from flask import Flask, jsonify
 # Database Setup
 #################################################
 # 1.0 Create the engine.
-engine = create_engine("sqlite:///Resources/hawaii.sqlite")
+engine = create_engine("sqlite:///Starter_Code/Resources/hawaii.sqlite")
 
 # 2.0 Reflect an existing database into a new model.
 Base = automap_base()
@@ -145,8 +145,8 @@ def start_route(start):
     # 1.0 Create our session (link) from Python to the DB
     session = Session(engine)
 
-    # 2.0 Query the data to get all of the dates and temps.
-    query = session.query(Measurement.date, Measurement.tobs).all()
+    # 2.0 Query the data to get all of the dates and temps in the range.
+    query = session.query(Measurement.date, Measurement.tobs).filter(Measurement.date >= start).all()
     
     # 3.0 Close the session.
     session.close()
@@ -163,22 +163,51 @@ def start_route(start):
     if start_datetime < oldest_datetime or start_datetime > recent_datetime:
         return jsonify({"Error": "Date is out of data set range."}), 404
     
-    # 5.0 Iterate through the query results to create a dictionary 
-    # using a date: temps key-value pair, 
+    # X.0 To find the min, avg, max for each date, iterate through the query results 
+    # to create a dictionary using a date: temps key-value pair, 
     # where the values are a list of temps for each respective day.
-    start_query_dict = {}
-    for i, temp in query:
-        if i in start_query_dict:
-            start_query_dict[i].append(temp)
-        else:
-            start_query_dict[i] = [temp]
+    # I'm commenting this section out because I don't think it's necessary for the challenge.
+    # start_end_query_dict = {}
+    # for i, temp in query:
+        # if i in start_end_query_dict:
+            # start_end_query_dict[i].append(temp)
+        # else:
+            # start_end_query_dict[i] = [temp]
     
-    # 5.1 Iterate through the dictionary you just created to calculate
+    # X.1 Iterate through the dictionary you just created to calculate
     # the min, mean, and max of the temps for each date.
-    start_dict = {}
-    for i, j in start_query_dict.items():
-        if i >= start:
-            start_dict[i] = [min(j), np.mean(j), max(j)]
+    # start_end_dict = {}
+    # for i, j in start_end_query_dict.items():
+        # if i >= start and i <= end:
+            # start_end_dict[i] = [min(j), np.mean(j), max(j)]
+    
+    # 5.0 To find the min, avg, max for an entire range (given specified start and end dates),
+    # first find the min, avg, max for the entire range. 
+    def range(d,e):
+        temps_list = []
+        for i, j in query:
+            temps_list.append(j)
+        minimum = min(temps_list)
+        average = np.mean(temps_list)
+        maximum = max(temps_list)
+        # 5.1 Then put those values into a dictionary.
+        start_dict = {'Minimum':minimum, 'Average':average, 'Maximum':maximum}
+        # 5.2 Iterate through the query to find which dates correspond to the values.
+        # Create new dictionaries to show that data.
+        for i,j in query:
+            if j == minimum:
+                start_dict['Minimum'] = {'Date':i,'Temp':j}
+            if j == average:
+                start_dict['Average'] = {'Date':i,'Temp':j}
+            if j == maximum:
+                start_dict['Maximum'] = {'Date':i,'Temp':j}
+        return(start_dict)
+    
+    start_results = range(start,oldest_date)
+    
+    # 6.0 Return a JSON list.
+    return jsonify(start_results)
+
     
     # 6.0 Return a JSON list.
     return jsonify(start_dict)
@@ -193,8 +222,11 @@ def start_end_route(start, end):
     # 1.0 Create our session (link) from Python to the DB
     session = Session(engine)
 
-    # 2.0 Query the data to get all of the dates and temps.
-    query = session.query(Measurement.date, Measurement.tobs).all()
+    # 2.0 Query the data to get all of the dates and temps in the range.
+    query = session.query(Measurement.date, Measurement.tobs)\
+            .filter(Measurement.date >= start)\
+            .filter(Measurement.date <= end)\
+            .all()
     
     # 3.0 Close the session.
     session.close()
@@ -221,25 +253,50 @@ def start_end_route(start, end):
         return jsonify({"Error": "Start date is after end date."}), 404
     else: None
 
-    # 5.0 Iterate through the query results to create a dictionary 
-    # using a date: temps key-value pair, 
+    # X.0 To find the min, avg, max for each date, iterate through the query results 
+    # to create a dictionary using a date: temps key-value pair, 
     # where the values are a list of temps for each respective day.
-    start_end_query_dict = {}
-    for i, temp in query:
-        if i in start_end_query_dict:
-            start_end_query_dict[i].append(temp)
-        else:
-            start_end_query_dict[i] = [temp]
+    # I'm commenting this section out because I don't think it's necessary for the challenge.
+    # start_end_query_dict = {}
+    # for i, temp in query:
+        # if i in start_end_query_dict:
+            # start_end_query_dict[i].append(temp)
+        # else:
+            # start_end_query_dict[i] = [temp]
     
-    # 5.1 Iterate through the dictionary you just created to calculate
+    # X.1 Iterate through the dictionary you just created to calculate
     # the min, mean, and max of the temps for each date.
-    start_end_dict = {}
-    for i, j in start_end_query_dict.items():
-        if i >= start and i <= end:
-            start_end_dict[i] = [min(j), np.mean(j), max(j)]
+    # start_end_dict = {}
+    # for i, j in start_end_query_dict.items():
+        # if i >= start and i <= end:
+            # start_end_dict[i] = [min(j), np.mean(j), max(j)]
+    
+    # 5.0 To find the min, avg, max for an entire range (given specified start and end dates),
+    # first find the min, avg, max for the entire range. 
+    def range(d,e):
+        temps_list = []
+        for i, j in query:
+            temps_list.append(j)
+        minimum = min(temps_list)
+        average = np.mean(temps_list)
+        maximum = max(temps_list)
+        # 5.1 Then put those values into a dictionary.
+        start_dict = {'Minimum':minimum, 'Average':average, 'Maximum':maximum}
+        # 5.2 Iterate through the query to find which dates correspond to the values.
+        # Create new dictionaries to show that data.
+        for i,j in query:
+            if j == minimum:
+                start_dict['Minimum'] = {'Date':i, 'Temp':j}
+            if j == average:
+                start_dict['Average'] = {'Date':i,'Temp':j}
+            if j == maximum:
+                start_dict['Maximum'] = {'Date':i,'Temp':j}
+        return(start_dict)
+    
+    end_results = range(start,end)
     
     # 6.0 Return a JSON list.
-    return jsonify(start_end_dict)
+    return jsonify(end_results)
 
 
 if __name__ == '__main__':
