@@ -208,10 +208,6 @@ def start_route(start):
     # 6.0 Return a JSON list.
     return jsonify(start_results)
 
-    
-    # 6.0 Return a JSON list.
-    return jsonify(start_dict)
-
 @app.route("/api/v1.0/<start>/<end>")
 def start_end_route(start, end):
     """You can add your own start date by replacing the dates in the URL 
